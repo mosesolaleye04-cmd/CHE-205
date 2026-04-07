@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHM CBT — LMD Grafix</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --card: #181c26;
+    --border: #252a38;
+    --accent: #00e5a0;
+    --accent2: #3d8bff;
+    --warn: #ff6b35;
+    --text: #e8ecf4;
+    --muted: #7a8299;
+    --success: #00e5a0;
+    --error: #ff4d6a;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid BG */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,12,16,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.1rem;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+  .logo span { color: var(--muted); font-weight: 400; }
+  .hdr-right { display: flex; align-items: center; gap: 16px; }
+  #timer-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.95rem; color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 8px;
+    min-width: 80px; text-align: center;
+    display: none;
+  }
+  #timer-display.warn { color: var(--warn); border-color: var(--warn); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    position: fixed; top: 57px; left: 0; right: 0; z-index: 99;
+    height: 3px; background: var(--border);
+    display: none;
+  }
+  #progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 100px 20px 40px;
+  }
+  .screen.hidden { display: none !important; }
+
+  /* ── HOME ── */
+  .home-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    max-width: 560px; width: 100%;
+    padding: 48px 40px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .home-card::before {
+    content: '';
+    position: absolute; top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(0,229,160,0.12), transparent 70%);
+    pointer-events: none;
+  }
+  .subject-badge {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); background: rgba(0,229,160,0.1);
+    border: 1px solid rgba(0,229,160,0.25);
+    padding: 5px 14px; border-radius: 999px; margin-bottom: 24px;
+  }
+  .home-card h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800; line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .home-card p {
+    color: var(--muted); font-size: 0.93rem;
+    line-height: 1.6; margin-bottom: 32px;
+  }
+  .mode-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    margin-bottom: 28px;
+  }
+  .mode-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.22s;
+    text-align: left;
+  }
+  .mode-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .mode-card.selected { border-color: var(--accent); background: rgba(0,229,160,0.07); }
+  .mode-icon { font-size: 1.6rem; margin-bottom: 10px; }
+  .mode-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;
+  }
+  .mode-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+
+  .section-select {
+    width: 100%; margin-bottom: 20px;
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 16px;
+    border-radius: var(--radius); font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%237a8299'%3E%3Cpath d='M6 8 0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  .section-select:focus { outline: none; border-color: var(--accent); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 14px 32px;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.95rem; letter-spacing: 0.04em;
+    border: none; border-radius: var(--radius);
+    cursor: pointer; transition: all 0.22s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--accent); color: #0a0c10;
+    width: 100%;
+  }
+  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--card); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-danger {
+    background: var(--error); color: #fff; font-size: 0.85rem;
+    padding: 10px 20px;
+  }
+
+  /* ── QUIZ ── */
+  .quiz-wrap {
+    max-width: 680px; width: 100%;
+  }
+  .q-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 24px;
+  }
+  .q-counter {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem; color: var(--muted);
+  }
+  .q-counter strong { color: var(--accent); font-size: 1rem; }
+  .section-tag {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent2); background: rgba(61,139,255,0.1);
+    border: 1px solid rgba(61,139,255,0.2);
+    padding: 3px 10px; border-radius: 999px;
+  }
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px;
+    margin-bottom: 18px;
+  }
+  .q-text {
+    font-size: 1.02rem; line-height: 1.65;
+    font-weight: 400; margin-bottom: 0;
+  }
+  .options-list { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 18px;
+    cursor: pointer; transition: all 0.18s;
+    user-select: none;
+  }
+  .option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,229,160,0.05); }
+  .option.selected:not(.correct):not(.incorrect) {
+    border-color: var(--accent2); background: rgba(61,139,255,0.08);
+  }
+  .option.correct { border-color: var(--success); background: rgba(0,229,160,0.1); }
+  .option.incorrect { border-color: var(--error); background: rgba(255,77,106,0.08); }
+  .option.disabled { cursor: default; }
+  .opt-letter {
+    font-family: 'DM Mono', monospace; font-size: 0.78rem; font-weight: 500;
+    width: 26px; height: 26px; min-width: 26px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    background: var(--border); color: var(--muted);
+    transition: all 0.18s;
+  }
+  .option.selected .opt-letter { background: var(--accent2); color: #fff; }
+  .option.correct .opt-letter { background: var(--success); color: #0a0c10; }
+  .option.incorrect .opt-letter { background: var(--error); color: #fff; }
+  .opt-text { font-size: 0.92rem; line-height: 1.5; }
+
+  .feedback-box {
+    margin-top: 16px; padding: 14px 18px;
+    border-radius: var(--radius); font-size: 0.87rem; line-height: 1.55;
+    display: none;
+  }
+  .feedback-box.correct-fb { background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.3); color: var(--success); }
+  .feedback-box.incorrect-fb { background: rgba(255,77,106,0.08); border: 1px solid rgba(255,77,106,0.25); color: var(--error); }
+
+  .quiz-nav {
+    display: flex; gap: 12px; justify-content: space-between;
+    align-items: center; margin-top: 10px;
+  }
+  .quiz-nav .left, .quiz-nav .right { display: flex; gap: 10px; }
+
+  /* ── RESULTS ── */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    max-width: 520px; width: 100%;
+    padding: 48px 36px; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .score-ring {
+    width: 130px; height: 130px; margin: 0 auto 28px;
+    position: relative;
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .ring-bg { stroke: var(--border); }
+  .score-ring .ring-fill {
+    stroke: var(--accent);
+    stroke-dasharray: 326;
+    stroke-dashoffset: 326;
+    transition: stroke-dashoffset 1.2s ease;
+  }
+  .score-text {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .score-pct {
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.8rem;
+    color: var(--accent);
+  }
+  .score-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .result-card h2 {
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+  .result-meta {
+    display: flex; justify-content: center; gap: 28px; margin: 20px 0 32px;
+  }
+  .meta-item { text-align: center; }
+  .meta-val { font-family: 'DM Mono', monospace; font-size: 1.2rem; font-weight: 500; color: var(--text); }
+  .meta-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .result-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .result-btns .btn { flex: 1; min-width: 130px; }
+
+  /* ── REVIEW ── */
+  .review-list { max-width: 680px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
+  .review-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 22px;
+  }
+  .review-item.correct { border-left: 3px solid var(--success); }
+  .review-item.incorrect { border-left: 3px solid var(--error); }
+  .review-q { font-size: 0.9rem; line-height: 1.6; margin-bottom: 10px; color: var(--muted); }
+  .review-q strong { color: var(--text); }
+  .review-ans { font-size: 0.82rem; display: flex; gap: 18px; flex-wrap: wrap; }
+  .review-ans span { padding: 3px 10px; border-radius: 6px; }
+  .ra-your { background: rgba(255,77,106,0.12); color: var(--error); }
+  .ra-correct { background: rgba(0,229,160,0.1); color: var(--success); }
+  .ra-same { background: rgba(0,229,160,0.1); color: var(--success); }
+  .review-back { margin-bottom: 20px; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 20px;
+    font-size: 0.72rem; color: var(--muted);
+    letter-spacing: 0.06em;
+    position: relative; z-index: 1;
+  }
+  footer span { color: var(--accent); }
+
+  /* RESPONSIVE */
+  @media (max-width: 520px) {
+    .mode-grid { grid-template-columns: 1fr; }
+    .home-card { padding: 32px 20px; }
+    .question-card { padding: 22px 18px; }
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeUp 0.35s ease both; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">LMD<span> Grafix</span> · CHM</div>
+  <div class="hdr-right">
+    <div id="timer-display">00:00</div>
+    <button class="btn btn-danger" id="quit-btn" style="display:none" onclick="quitQuiz()">Quit</button>
+  </div>
+</header>
+<div class="progress-wrap" id="progress-wrap">
+  <div id="progress-bar"></div>
+</div>
+
+<!-- HOME SCREEN -->
+<div class="screen" id="home-screen">
+  <div class="home-card fade-in">
+    <div class="subject-badge">School of Physical Sciences · Chemistry</div>
+    <h1>Physical Chemistry<br>Tutorial Bank</h1>
+    <p>Tutorial Questions 1.1, 1.2, 1.3, 2.1, 3.1–3.3<br>Covering gases, kinetic theory, thermodynamics & more.</p>
+
+    <div class="mode-grid">
+      <div class="mode-card selected" onclick="selectMode('practice')" id="mode-practice">
+        <div class="mode-icon">📖</div>
+        <div class="mode-title">Practice</div>
+        <div class="mode-desc">Instant feedback on each answer. No timer.</div>
+      </div>
+      <div class="mode-card" onclick="selectMode('exam')" id="mode-exam">
+        <div class="mode-icon">⏱️</div>
+        <div class="mode-title">Exam</div>
+        <div class="mode-desc">Timed. Results revealed at the end.</div>
+      </div>
+    </div>
+
+    <select class="section-select" id="section-select">
+      <option value="all">All Sections (Full Bank)</option>
+      <option value="1.1">Tutorial 1.1 — Kinetic Theory & Gas Laws</option>
+      <option value="1.2">Tutorial 1.2 — Gas Laws & Behaviour</option>
+      <option value="1.3">Tutorial 1.3 — Real Gases & Van der Waals</option>
+      <option value="2.1">Tutorial 2.1 — Maxwell Distribution & Speeds</option>
+      <option value="3.1">Tutorial 3.1 — Thermodynamics I</option>
+      <option value="3.2">Tutorial 3.2 — Thermodynamics II</option>
+      <option value="3.3">Tutorial 3.3 — Thermodynamics III</option>
+    </select>
+
+    <button class="btn btn-primary" onclick="startQuiz()">Start Quiz →</button>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div class="screen hidden" id="quiz-screen">
+  <div class="quiz-wrap fade-in">
+    <div class="q-header">
+      <div class="q-counter">Q <strong id="q-num">1</strong> / <span id="q-total">50</span></div>
+      <div class="section-tag" id="q-section-tag">Tutorial 1.1</div>
+    </div>
+    <div class="question-card">
+      <p class="q-text" id="q-text">Question text here</p>
+    </div>
+    <div class="options-list" id="options-list"></div>
+    <div class="feedback-box" id="feedback-box"></div>
+    <div class="quiz-nav">
+      <div class="left">
+        <button class="btn btn-secondary" onclick="prevQ()" id="prev-btn" style="display:none">← Prev</button>
+      </div>
+      <div class="right">
+        <button class="btn btn-primary" onclick="nextQ()" id="next-btn">Next →</button>
+        <button class="btn btn-primary" onclick="submitQuiz()" id="submit-btn" style="display:none">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div class="screen hidden" id="result-screen">
+  <div class="result-card fade-in">
+    <div class="score-ring">
+      <svg width="130" height="130" viewBox="0 0 130 130">
+        <circle class="ring-bg" cx="65" cy="65" r="52" fill="none" stroke-width="10"/>
+        <circle class="ring-fill" id="ring-fill" cx="65" cy="65" r="52" fill="none" stroke-width="10" stroke-linecap="round"/>
+      </svg>
+      <div class="score-text">
+        <div class="score-pct" id="score-pct">0%</div>
+        <div class="score-lbl">Score</div>
+      </div>
+    </div>
+    <h2 id="result-title">Quiz Complete!</h2>
+    <p id="result-subtitle" style="color:var(--muted);font-size:0.88rem;margin-bottom:0"></p>
+    <div class="result-meta">
+      <div class="meta-item">
+        <div class="meta-val" id="res-correct">0</div>
+        <div class="meta-lbl">Correct</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-val" id="res-wrong">0</div>
+        <div class="meta-lbl">Wrong</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-val" id="res-total">0</div>
+        <div class="meta-lbl">Total</div>
+      </div>
+    </div>
+    <div class="result-btns">
+      <button class="btn btn-secondary" onclick="showReview()">Review</button>
+      <button class="btn btn-primary" onclick="goHome()">Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW SCREEN -->
+<div class="screen hidden" id="review-screen">
+  <div class="review-list fade-in" id="review-list">
+    <div class="review-back">
+      <button class="btn btn-secondary" onclick="backToResult()">← Back to Results</button>
+    </div>
+  </div>
+</div>
+
+<footer>Powered by <span>LMD Grafix</span> · Physical Chemistry CBT</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  QUESTION BANK
+// ═══════════════════════════════════════════════════════
+const questionBank = [
+  // ── TUTORIAL 1.1 ──
+  {s:"1.1",q:"Which of the following assumptions explains the great compressibility of gases?",o:["The actual volume of the gas molecules is negligible","There is no force of attraction","Particles are always in random motion","Different particles have different speeds"],a:0},
+  {s:"1.1",q:"Gases ______ and occupy all the space that is available to them.",o:["contract","compress","expand","shrink"],a:2},
+  {s:"1.1",q:"Why do you think the pressure is exerted by the gas on the walls of the container in all directions?",o:["They consist of identical particles","Collide with each other during random motion","Lack of definite shape","More forces of attraction"],a:1},
+  {s:"1.1",q:"Collisions of gas molecules are ______.",o:["Perfectly elastic","Inelastic","Always occur in a proper and predicted motion","Not conserved"],a:0},
+  {s:"1.1",q:"At any instant, different particles have ______ speeds.",o:["Same","Different","Opposite","Similar"],a:1},
+  {s:"1.1",q:"There is an increase in temperature of an object. The kinetic energy of the object ______.",o:["Decreases","Increases","Remains the same","It is not related to the temperature"],a:1},
+  {s:"1.1",q:"The temperature of a gas is 100 K and it is heated until it is 200 K. What do you understand regarding kinetic energy in this process?",o:["Halved","Tripled","Quadrupled","Doubled"],a:3},
+  {s:"1.1",q:"Which of the following is NOT a postulate of Kinetic Molecular Theory of gases?",o:["The actual volume of gas molecules is negligible","There are high forces of attraction between gas molecules","Collisions are elastic in gas molecules","Kinetic energy of gas molecules is directly proportional to the absolute temperature"],a:1},
+  {s:"1.1",q:"Which of the following statements is the correct one?",o:["In gases there is a predominance of intermolecular energy","All molecules have the same speed at different temperatures","Collisions of gas molecules are elastic","Do not exert the same pressure in all directions"],a:2},
+  {s:"1.1",q:"Which statement is FALSE?",o:["The density of a gas is constant as long as its temperature remains constant","Gases can be expanded without limit","Gases diffuse into each other and mix almost immediately when put into the same container","The molecular weight of a gaseous compound is a non-variable quantity"],a:1},
+  {s:"1.1",q:"A sample of oxygen occupies 47.2 L under a pressure of 1240 torr at 25°C. What volume would it occupy at 25°C if the pressure were decreased to 730 torr?",o:["27.8 L","29.3 L","47.8 L","80.2 L"],a:3},
+  {s:"1.1",q:"A sample of nitrogen occupies 5.50 L under a pressure of 900 torr at 25°C. At what temperature will it occupy 10.0 L at the same pressure?",o:["32°C","109°C","154°C","269°C"],a:0},
+  {s:"1.1",q:"Under conditions of fixed temperature and amount of gas, Boyle's law requires that:",o:["I only (P₁V₁ = P₂V₂)","II only (PV = constant)","III only (P₁/P₂ = V₂/V₁)","I, II, and III"],a:3},
+  {s:"1.1",q:"The volume of a sample of nitrogen is 6.00 L at 35°C and 740 torr. What volume will it occupy at STP?",o:["6.59 L","5.46 L","6.95 L","5.67 L"],a:1},
+  {s:"1.1",q:"The density of chlorine gas at STP, in gram per litre, is approximately:",o:["6.2","3.2","3.9","4.5"],a:1},
+  {s:"1.1",q:"What pressure (in atm) would be exerted by 76 g of fluorine gas in a 1.50 L vessel at −37°C?",o:["26 atm","4.1 atm","19,600 atm","84 atm"],a:0},
+  {s:"1.1",q:"What is the density of ammonia gas at 2.00 atm pressure and a temperature of 25.0°C?",o:["0.720 g/L","0.980 g/L","1.39 g/L","16.6 g/L"],a:1},
+  {s:"1.1",q:"A container with volume 71.9 mL contains water vapor at a pressure of 10.4 atm and temperature of 465°C. How many grams of gas are in the container?",o:["0.421 g","0.183 g","0.363 g","0.222 g"],a:1},
+  {s:"1.1",q:"What is the molecular weight of a pure gaseous compound having a density of 4.95 g/L at −35°C and 1020 torr?",o:["24","11","72","120"],a:2},
+  {s:"1.1",q:"A 0.580 g sample of a compound containing only carbon and hydrogen contains 0.480 g of carbon and 0.100 g of hydrogen. At STP, 33.6 mL of the gas has a mass of 0.087 g. What is the molecular (true) formula for the compound?",o:["CH₄","C₂H₆","C₃H₈","C₄H₁₀"],a:1},
+  {s:"1.1",q:"A mixture of 90.0 g of CH₄ and 10.0 g of argon has a pressure of 250 torr under conditions of constant temperature and volume. The partial pressure of CH₄ in torr is ______.",o:["143","100","10.7","239"],a:3},
+  {s:"1.1",q:"What pressure (in atm) would be exerted by a mixture of 1.4 g of nitrogen gas and 4.8 g of oxygen gas in a 200 mL container at 57°C?",o:["4.7","34","47","27"],a:0},
+  {s:"1.1",q:"A sample of hydrogen gas collected by displacement of water occupied 30.0 mL at 24°C on a day when the barometric pressure was 736 torr. What volume would the hydrogen occupy if it were dry and at STP? The vapour pressure of water at 24.0°C is 22.4 torr.",o:["32.4 mL","21.6 mL","36.8 mL","25.9 mL"],a:3},
+  {s:"1.1",q:"Which one of the following statements is NOT consistent with the kinetic-molecular theory of gases?",o:["Individual gas molecules are relatively far apart","The actual volume of the gas molecules themselves is very small compared to the volume occupied by the gas at ordinary temperatures and pressure","The average kinetic energies of different gases are different at the same temperature","There is no net gain or loss of the total kinetic energy in collisions between gas molecules"],a:2},
+  {s:"1.1",q:"A mixture of 0.50 mol N₂(g) and 0.50 mol H₂(g) is introduced into a 15.0 L container having a pinhole leak at 30°C. After a period of time, which of the following is true?",o:["The partial pressure of N₂ exceeds that of H₂ in the container","The partial pressure of H₂ exceeds that of N₂ in the container","The partial pressures of both gases remain equal","The partial pressures of both gases increase above their initial values"],a:1},
+  {s:"1.1",q:"If helium effuses through a porous barrier at a rate of 4.0 moles per minute, at what rate (in moles per minute) would oxygen gas diffuse?",o:["0.20","0.50","8.0","1.41"],a:1},
+  {s:"1.1",q:"A real gas most closely approaches the behaviour of an ideal gas under conditions of:",o:["High P and low T","Low P and high T","Low P and low T","High P and high T"],a:1},
+  {s:"1.1",q:"Which one of the following statements about the following reaction is false? CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(g). Every methane molecule that reacts with excess methane, the maximum amount of carbon dioxide produced will be 22.0 g. If 11.2 L of methane reacts with an excess of oxygen, the volume of carbon dioxide produced at STP is (44/16)(11.2) L.",o:["Every methane molecule that reacts produces two water molecules","If 32.0 g of oxygen reacts with excess methane, the maximum amount of CO₂ produced will be 22.0 g","If 11.2 L of methane reacts with excess O₂, the volume of CO₂ produced at STP is (44/16)(11.2) L","All of the above are false"],a:1},
+  {s:"1.1",q:"What total gas volume (in litres) at 520°C and 880 torr would result from the decomposition of 33 g of potassium bicarbonate: 2KHCO₃(s) → K₂CO₃(s) + CO₂(g) + H₂O(g)?",o:["56 L","37 L","10 L","19 L"],a:1},
+  {s:"1.1",q:"Calculate the weight of KClO₃ that would be required to produce 29.5 L of oxygen measured at 127°C and 760 torr: 2KClO₃(s) → 2KCl(s) + 3O₂(g)",o:["7.82 g","12.2 g","14.6 g","73.5 g"],a:3},
+  {s:"1.1",q:"Which of the following statements about real gases is false?",o:["The properties of N₂(g) will deviate more from ideality at −100°C than at 100°C","Van der Waal's equation corrects for the non-ideality of real gases","Molecules of CH₄(g) at high pressures and low temperatures have no attractive forces between each other","Real gases do not always obey the ideal gas laws"],a:2},
+  {s:"1.1",q:"The ideal gas law predicts that the molar volume (volume of one mole) of gas equals:",o:["PV/gRT","RT/MWP","RT/P","P"],a:2},
+  {s:"1.1",q:"Three 1.0 L flasks are filled with H₂, O₂ and Ne, respectively, at STP. Which of the following statements is true?",o:["Each flask has the same number of gas molecules","The velocity of the gas molecules is the same in each flask","The density of each gas is the same","There are twice as many O₂ and H₂ molecules as Ne atoms"],a:0},
+  {s:"1.1",q:"For a gas, which pair of variables are inversely proportional to each other (if all other conditions remain constant)?",o:["P, T","V, T","P, n","n, V"],a:0},
+  {s:"1.1",q:"The kinetic model of matter states that:",o:["Atoms and molecules move in continuous and non-random motion","Atoms and molecules move in continuous and random motion","The kinetic energies of atoms and molecules increase with increasing temperature","The pressure of atoms and molecules is due to the collision of these particles with the walls of the container they are in"],a:3},
+  {s:"1.1",q:"Using a microscope, Peter observes that some pollen grains suspended in water move in an irregular manner. This is due to:",o:["Pollen grains colliding with one another","Pollen grains repelling one another","Bombardment of pollen grains by water molecules","Bombardment of water molecules by pollen grains"],a:3},
+  {s:"1.1",q:"As the temperature of a gas increases, the gas molecules:",o:["Move faster","Expand in volume","Increase in mass","Increase in number"],a:0},
+  {s:"1.1",q:"Solids have high densities relative to liquids because (1) the particles in solids are far apart (2) the particles in solids have large masses (3) the particles in solids do not move about.",o:["1 only","2 only","2 and 3 only","None of the above"],a:2},
+  {s:"1.1",q:"Sade observes that she cannot compress a syringe filled with water, but she can do so when the same syringe is filled with air. This is because (1) the air molecules are farther apart than the water molecules (2) there are larger empty spaces between the air molecules compared to between the water molecules (3) the water molecules have weaker forces of attraction than air molecules.",o:["1 only","2 only","2 and 3 only","1 and 2 only"],a:3},
+  {s:"1.1",q:"Which is not a phase of matter?",o:["Solid","Liquid","Plasma","Gas"],a:2},
+  {s:"1.1",q:"Which is NOT a component of the kinetic theory of matter?",o:["All particles are in random motion","Particles have space between them","Matter is composed of small particles","None of the above"],a:3},
+  {s:"1.1",q:"All matter exists in at least one phase. What leads to a change of phase in matter?",o:["A change in the number of particles","A change in the amount of energy","A change in the direction of particle movement","A change in the shape of the container"],a:1},
+  {s:"1.1",q:"At what temperature will the root mean square velocity of oxygen molecules be sufficient so as the escape from the earth?",o:["1.6×10⁴ K","8.16×10⁴ K","1.60×10⁵ K","1.60×10⁶ K"],a:2},
+  {s:"1.1",q:"The first excited state of hydrogen atom is 10⁴ eV above its ground state. What temperature is needed to excite hydrogen atoms to first excited level?",o:["7.88×10⁷ K","7.88×10⁶ K","7.88×10⁵ K","0 K"],a:0},
+  {s:"1.1",q:"The atomic weight of iodine is 127. A standing wave in a tube filled with iodine gas at 400 K has nodes that are 6.77 cm apart when the frequency is 1000 vib/sec. Iodine is:",o:["Monoatomic","Diatomic","Triatomic","None of these"],a:1},
+  {s:"1.1",q:"Two gases occupy two containers A and B. Gas in A, of volume 0.10 m³, exerts a pressure of 1.40 MPa and that in B of volume 0.15 m³ exerts a pressure 0.7 MPa. The two containers are united by a tube of negligible volume and the gases are allowed to intermingle. Then if the temperature remains constant, the final pressure in the container will be (in MPa) ______.",o:["0.70","0.98","1.40","0"],a:1},
+  {s:"1.1",q:"For monatomic gases, total kinetic energy E = (3/2)PV from theory because each molecule has 3 translational degrees of freedom averaging (1/2)kT each. [True/False (it's 5/2 for diatomic)]",o:["True","False (it's 5/2 for diatomic)"],a:0},
+
+  // ── TUTORIAL 1.2 ──
+  {s:"1.2",q:"From the kinetic theory, which assumption is most directly used to derive the ideal gas law relation PV = nRT?",o:["Gas molecules move only along one spatial axis","Gas molecules exert attractive forces at close range","Gas molecules undergo perfectly elastic collisions with container walls","Gas molecules have significant volume compared to container volume"],a:2},
+  {s:"1.2",q:"A gas exerts pressure on its container because:",o:["The molecules of a gas collide with the walls of the container","Some of the molecules are moving faster than others","Of the collisions of the molecules with each other","Of the mass of the molecules of the gas"],a:0},
+  {s:"1.2",q:"The basic assumption about collisions of the gaseous molecules is that the collisions of gaseous molecules are:",o:["Forces of attraction and repulsion are always between molecules","Gaseous molecules will continue their motion indefinitely","Gaseous molecules can be compressed","Gases can be expanded"],a:1},
+  {s:"1.2",q:"The volume of a given gas is V cm³ at a pressure P mmHg. What is the new volume of the gas if the pressure is reduced to half at constant temperature?",o:["4V cm³","2V cm³","V/2 cm³","V cm³"],a:1},
+  {s:"1.2",q:"Which of the following statements is NOT correct?",o:["The average kinetic energy of a gas is directly proportional to its temperature","At constant temperature, the volume of a gas increases as the pressure increases","The pressure of a gas is directly proportional to the density","The temperature of a gas is directly proportional to its volume"],a:1},
+  {s:"1.2",q:"When air is compressed:",o:["Its density decreases","Its temperature decreases","Its temperature increases","Its temperature remains unchanged"],a:2},
+  {s:"1.2",q:"A 50 cm³ of gas was collected over water at 10°C and 765 mm Hg. Calculate the volume of the gas at STP if the saturated vapour pressure of water at 10°C is 5 mmHg.",o:["49.19 cm³","48.87 cm³","48.55 cm³","48.23 cm³"],a:3},
+  {s:"1.2",q:"If the volume of a given mass of gas at 298 K and pressure of 205.2×10³ Nm⁻² is 2.12 dm³, what is the volume of the gas at STP? (Standard pressure = 101.3×10³ Nm⁻², Standard temperature = 273K)",o:["39.3 dm³","22.4 dm³","4.93 dm³","3.93 dm³"],a:3},
+  {s:"1.2",q:"Boyle's law can be expressed mathematically as:",o:["V ∝ T (P constant)","P ∝ V (T constant)","P ∝ T","V ∝ 1/P (T constant)"],a:3},
+  {s:"1.2",q:"Which of the following statements about intermolecular distances and cohesive forces between gas is correct?",o:["Both large and negligible","Both negligible","Constant and negligible","Large and negligible"],a:3},
+  {s:"1.2",q:"The diagram illustrates the rate curve obtained when Mg reacted with dilute HCl. The diagram became horizontal at X because:",o:["The reaction was slowed down","All the dilute HCl has reacted","All the Mg has reacted","Hydrogen gas is produced at a steady rate"],a:2},
+  {s:"1.2",q:"A given amount of gas occupies 10.0 dm³ at 4 atm and 273°C. The number of moles of gas present is [Molar volume of gas at STP = 22.4 dm³]",o:["0.89 mol","1.90 mol","3.80 mol","5.70 mol"],a:1},
+  {s:"1.2",q:"The velocity, V, of a gas is related to its mass, M, by V = kM^n (k = proportionality constant):",o:["V = kM","V = kM²","V = (kM)^½","V = (kM)^¼"],a:2},
+  {s:"1.2",q:"If the volume of a given mass of gas at 0°C is 29.5 cm³, given that the pressure remains constant, what will be the volume of the gas at 15°C?",o:["31.6","62.2","32.7","31.1"],a:3},
+  {s:"1.2",q:"What is the partial pressure of oxygen at STP in a gaseous mixture containing 100 cm³ of oxygen and 900 cm³ of nitrogen gas?",o:["1.0 atm","0.1 atm","9.0 atm","0.9 atm"],a:1},
+  {s:"1.2",q:"In kinetic theory, the pressure of a gas is due to:",o:["Mutual attraction between molecules","Weight of gas molecules","Collisions of molecules with container walls","Rotation of molecules"],a:2},
+  {s:"1.2",q:"From P = (1/3)Nv̄ₘv², Boyle's law is obtained by keeping:",o:["N and V constant","V and m constant","N and V constant","m and P constant"],a:0},
+  {s:"1.2",q:"When temperature increases at constant pressure, kinetic theory predicts that:",o:["Collision frequency with walls must increase, so volume increase","Collision frequency must decrease, so volume decreases","Number of moles must increase","Mass of each molecule increases"],a:0},
+  {s:"1.2",q:"Charles's law follows from kinetic theory because at constant pressure:",o:["Average kinetic energy is constant","Average kinetic energy is inversely proportional to absolute temperature","Average kinetic energy is proportional to absolute temperature","Molecular mass changes with temperature"],a:2},
+  {s:"1.2",q:"For an ideal gas, the average translational kinetic energy per molecule is proportional to:",o:["Average kinetic energy is constant","Average kinetic energy is inversely proportional to temperature","Average kinetic energy is proportional to absolute temperature","Molecular mass changes with temperature"],a:2},
+  {s:"1.2",q:"Avogadro's law is consistent with kinetic theory because at given T and P:",o:["Different gases have different average kinetic energies","All gases have same average kinetic energy per molecule","Heavier gases have higher average kinetic energy","Lighter gases have zero kinetic energy"],a:1},
+  {s:"1.2",q:"Equal volumes of different ideal gases at the same temperature and pressure contain equal number of molecules because:",o:["Only molecular mass","Only molecular size","Number of molecules depends on pressure and temperature","Molecular density and average kinetic energy"],a:2},
+  {s:"1.2",q:"In kinetic theory, increasing the number of molecules N at constant V and T leads to:",o:["Decrease in pressure","No change in pressure","Increase in pressure","Molecular shape"],a:2},
+  {s:"1.2",q:"The relation PV = (2/3)E for translational kinetic energy (E) shows that at constant V:",o:["Pressure is proportional to total kinetic energy","Pressure is inversely proportional to kinetic energy","Pressure is independent of kinetic energy","Pressure is proportional to molecular mass only"],a:0},
+  {s:"1.2",q:"Kinetic theory assumes gas molecules:",o:["Attract one another strongly","Repel one another strongly","Neither attract nor repel except during collisions","Are stationary"],a:2},
+  {s:"1.2",q:"The derivation of gas laws from kinetic theory uses which key assumption about molecular collisions?",o:["Collisions are perfectly elastic","Attract one another strongly","Repel one another strongly","Neither attract nor repel strongly"],a:0},
+  {s:"1.2",q:"The ideal gas constant R in PV=nRT can be expressed in terms of Boltzmann constant kB as:",o:["R = kB","R = N·kB","R = kB/N","R = 1/kB"],a:1},
+  {s:"1.2",q:"The root-mean-square speed (v_rms) of gas molecules is related to temperature by v_rms ∝ T. At constant P, doubling T implies the volume will:",o:["Remain same","Double","Halve","Become four times"],a:1},
+  {s:"1.2",q:"Avogadro's hypothesis can be stated microscopically as: At same T and P, all ideal gases have different number density:",o:["At same T and P, number density is zero","At same T and P, all ideal gases have same number density","At same T and P, different ideal gases have different number densities","Number density depends only on molecular mass"],a:1},
+  {s:"1.2",q:"Law of rectilinear diameters states: ρ_liquid + ρ_vapour = constant × T, linear with T:",o:["P constant","B constant","Critical volume average","All"],a:2},
+
+  // ── TUTORIAL 1.3 ──
+  {s:"1.3",q:"Ideal gas law fails for real gases primarily due to:",o:["Negligible molecular volume","Significant intermolecular forces","Perfect elasticity","Zero mass"],a:1},
+  {s:"1.3",q:"Van der Waals equation modifies ideal gas law by adding terms for:",o:["Molecular volume and attractions","Pressure only","Temperature only","Molecular speed"],a:0},
+  {s:"1.3",q:"Compressibility factor Z = PV/nRT equals 1 for:",o:["Real gases at high T, low P","All real gases","Ideal gases only","Liquids"],a:2},
+  {s:"1.3",q:"Real gases approach ideal behaviour at:",o:["High pressure, low temperature","Low pressure, high temperature","All real gases","Ideal gases only"],a:1},
+  {s:"1.3",q:"Boyle temperature is where real gas Z=1 and:",o:["Triple point","Critical point","dZ/dP = 0","STP"],a:2},
+  {s:"1.3",q:"Virial equation expands PV/RT as series in:",o:["1/T","1/P","Molecular density (N/V)","P"],a:2},
+  {s:"1.3",q:"For CO₂ at room temperature, Z < 1 because:",o:["Molecular volume negligible","Attractions dominate repulsions","Volume exclusion negligible","No collisions"],a:1},
+  {s:"1.3",q:"Critical constants relate to van der Waals constants by:",o:["Pc = a/27b², Tc = 8a/27Rb, Vc = 3b","Tc = a/27b² only","Both A and B","Vc = 3b only"],a:0},
+  {s:"1.3",q:"Reduced equation of state uses:",o:["Pr = P/Pc, Tr = T/Tc, Vr = V/Vc","Absolute values","STP conditions","Molar volume only"],a:0},
+  {s:"1.3",q:"Joule-Thomson effect (cooling on expansion) occurs for real gases below:",o:["Inversion temperature","Boyle temperature","Critical temperature","Absolute zero"],a:0},
+  {s:"1.3",q:"For H₂ at room temperature, μ_JT > 0 (heating) because:",o:["Repulsive forces dominate","Attractive forces dominate","Boyle temperature","Absolute zero"],a:0},
+  {s:"1.3",q:"Andrews' isotherms show real gas liquefaction when:",o:["P > Pc, T < Tc","Above critical point","Ideal behaviour","Zero volume"],a:0},
+  {s:"1.3",q:"Corresponding states principle holds approximately because:",o:["Molecules identical","Intermolecular forces scale similarly","Gases monoatomic","No phase transitions"],a:1},
+  {s:"1.3",q:"Dieterici equation is:",o:["P(V−b)e^(a/VRT) = RT","Same as van der Waals","PV = RT","Redlich-Kwong"],a:0},
+  {s:"1.3",q:"For one mole of an ideal gas, combining kinetic theory with Avogadro's law leads to:",o:["That R is kB","That R = N·kB","That R is a universal constant","That R depends on volume"],a:2},
+  {s:"1.3",q:"Redlich-Kwong improves van der Waals for:",o:["High T accuracy","Vapor pressures","Both","Critical point only"],a:2},
+  {s:"1.3",q:"Fugacity measures deviation from ideality as effective:",o:["Pressure","Temperature","Volume","Entropy"],a:0},
+  {s:"1.3",q:"Amagat's law for gas mixtures assumes:",o:["Ideal mixing volumes","Dalton's partial pressures","Non-additive volumes","Both"],a:0},
+  {s:"1.3",q:"For real gases, enthalpy departure from ideal is due to:",o:["Intermolecular potential energy","Translational KE only","Phase change to liquid","Zero"],a:0},
+  {s:"1.3",q:"In P-V diagram, real gas below Tc shows:",o:["Van der Waals loop (unstable)","Maxwell construction","Both","Ideal hyperbola"],a:2},
+  {s:"1.3",q:"Rule of 8: T_boil/ε ≈ 0.60.7 predicts:",o:["LJ potential depth","Critical T","Boyle T","Ideal hyperbola"],a:0},
+  {s:"1.3",q:"For supercritical fluids (T > Tc):",o:["Gas-like density tunable","No distinct phases","Both","Liquid only"],a:2},
+  {s:"1.3",q:"Activity coefficient γᵢ → 1 as:",o:["xᵢ → 1 (pure) or dilute ideal","High P","Low T","Critical"],a:0},
+  {s:"1.3",q:"Berthelot equation modifies van der Waals for:",o:["Low T accuracy","High P","Critical region","All"],a:0},
+  {s:"1.3",q:"Real gas internal energy U depends on:",o:["V (unlike ideal U=U(T)) due to attractions","T only","P","n"],a:0},
+  {s:"1.3",q:"Lewis fugacity f = φP where φ → 1 for:",o:["Ideal","Real high P","Both A and B","None"],a:0},
+  {s:"1.3",q:"Vapour pressure curves end at:",o:["Critical point","Triple point","Boyle T","STP"],a:0},
+  {s:"1.3",q:"For air separation, real gas effects important near:",o:["Liquefaction T (~78K N₂)","Room T","High P","Low P"],a:0},
+  {s:"1.3",q:"Soave modification (SRK) improves RK for:",o:["Hydrocarbons vapor pressure","Polars","Water","All"],a:0},
+  {s:"1.3",q:"Kinetic diameter affects real gas 'b' as:",o:["4× molecular volume","Collision cross-section","Both","Mass"],a:2},
+  {s:"1.3",q:"Ultimate test of corresponding states: universal Zc ≈ 0.27 for simple fluids confirms:",o:["Intermolecular similarity","Ideal failure","Phase rule","All"],a:0},
+
+  // ── TUTORIAL 2.1 ──
+  {s:"2.1",q:"What is the numerical value of the gas constant, R, in J mol⁻¹ K⁻¹?",o:["0.0682","8.314","0.00821","8.143"],a:1},
+  {s:"2.1",q:"The most probable speed, c_mp, of a gas is given by:",o:["c_mp = √(2RT/M)","c_mp = √(8RT/πM)","c_mp = √(2RT/M)","c_mp = √(3RT/M)"],a:0},
+  {s:"2.1",q:"The distribution of velocities of gas molecules is influenced by:",o:["Temperature","Molar mass of the gas","Options A and B","None of the above"],a:2},
+  {s:"2.1",q:"The velocity that most of the gas molecules possessed is known as:",o:["The root mean square velocity","The average velocity","The most probable velocity","The relative velocity"],a:2},
+  {s:"2.1",q:"For gaseous molecules, the ratio of the most probable velocity to that of root mean square velocity is:",o:["The most probable velocity","The average velocity","The root mean square velocity","The relative velocity"],a:0},
+  {s:"2.1",q:"Which of the following statements is incorrect?",o:["Gases with lower molecular mass will have their molecules moving at higher speeds","At lower temperature, gas molecules tend to have low average speed","At higher temperature, gas molecules tend to have high average velocities and broad distribution of speeds","At a higher temperature value, gases tend to have low average velocities and less broad distribution of velocities"],a:3},
+  {s:"2.1",q:"The distribution of speeds f(c) = 4π(M/2πRT)^(3/2) · c² · e^(−Mc²/2RT) dc. This implies that when the molecular mass M is large, many molecules will possess high speed when temperature T is high.",o:["The greater the fraction of gas molecules with high speed when T is high","When the molecular mass M is large, many molecules will possess very high speeds","The molecular fraction tends towards infinity as velocity c goes to zero","None of the above"],a:0},
+  {s:"2.1",q:"The molecules of a gas with high molecular mass will possess:",o:["A broad distribution of speeds","B steep distribution of speeds","A broad distribution of speeds","All of the above"],a:1},
+  {s:"2.1",q:"The root mean square speed of gases is:",o:["Directly proportional to the absolute temperature","Inversely proportional to the square root of the absolute temperature","Inversely proportional to the square root of the molecular mass","Directly proportional to the square root of the absolute temperature"],a:2},
+  {s:"2.1",q:"The root mean square speed of gases is:",o:["Inversely proportional to the square of the molecular mass","Inversely proportional to the square root of the molecular mass","Inversely proportional to the absolute temperature","Directly proportional to the square root of the molecular mass"],a:1},
+  {s:"2.1",q:"At a lower temperature, most gas molecules move with a speed close to the:",o:["Most probable speed","None of the above","Inversely proportional to molecular mass","Directly proportional to molecular mass"],a:0},
+  {s:"2.1",q:"Which of the following is not an assumption of kinetic theory of gases?",o:["Root mean square speed","Average speed","Most probable speed","Relative speed"],a:3},
+  {s:"2.1",q:"Which of the following statements is correct?",o:["PV = nRT","2PV = RT","PV = RT","PV = KnT"],a:0},
+  {s:"2.1",q:"The root mean square velocity of gas molecules is given by the relation:",o:["√(3RT/M)","√(5pρ)","√(M)","All of the above"],a:0},
+  {s:"2.1",q:"The average velocity gas molecules is given by the relation:",o:["√(3RT/M)","√(2RT/M)","√(8RT/πM)","√(2RT/M)"],a:2},
+  {s:"2.1",q:"Boltzmann constant, Kв, can be evaluated using this relationship:",o:["R/N","R × N","N/R","(R/N)^(1/2)"],a:0},
+  {s:"2.1",q:"For one mole of a gas, the ideal gas equation is:",o:["PV = nRT","PV = RT","2PV = RT","PV = KnT"],a:1},
+  {s:"2.1",q:"Which of the following statements is correct?",o:["At a high temperature value, gases tend to have low average velocities and less broad distribution of velocities","At a high temperature value, gases tend to have high average velocities and broad distribution of velocities","At a high temperature value, gases tend to have high average velocities and less broad distribution of velocities","None of the above"],a:1},
+  {s:"2.1",q:"The total kinetic energy of 5 nmol of He particles at 25°C is ___ (R = 8.314)",o:["1.56 J","18.58 KJ","1.56 KJ","18.58 J"],a:0},
+  {s:"2.1",q:"Which of the following relationships between average kinetic energy (e) and total kinetic energy (E) is correct? Note: Nₐ represents the Avogadro's number.",o:["E = (3/2)Nₐe","E = N/e","E = Nₐ/e","None of the above"],a:0},
+  {s:"2.1",q:"The speed at which one gas molecule approaches another gas molecule is termed:",o:["Boltzmann's speed","Average speed","Comparative speed","Relative speed"],a:3},
+  {s:"2.1",q:"Calculate the average kinetic energy of 2 nmol of oxygen gas at 20°C (R = 8.314 J mol⁻¹K⁻¹, Nₐ = 6.022×10²³ mol⁻¹)",o:["1.2×10²⁰ J","1.2×10⁻²⁰ J","1.2×10⁻²⁰ J","1.2×10²³ J"],a:1},
+  {s:"2.1",q:"Given that the specific heat capacity at constant pressure (Cp) of nitrogen is 4.0 J mol⁻¹K⁻¹, calculate the enthalpy change (ΔH) when 14 g of nitrogen gas is heated from 25 to 50°C. [N=14]",o:["100 J","50 J","400 J","50 J"],a:0},
+  {s:"2.1",q:"Calculate the most probable velocity of CO₂ molecules at 100°C. [C=12, O=16; R = 8.314]",o:["194 m s⁻¹","460 m s⁻¹","12 m s⁻¹","375 m s⁻¹"],a:0},
+  {s:"2.1",q:"The mass of a gas 'X' is 5.3×10⁻²⁴ g, what is the molecular mass of the gas if the Avogadro's number is 6.022×10²³ mol⁻¹?",o:["0.032 g mol⁻¹","0.32 g mol⁻¹","3.2 g mol⁻¹","None of the above"],a:1},
+  {s:"2.1",q:"The molar heat capacity at constant volume (Cv) for monoatomic gas is ___ Where R is the gas constant.",o:["Cv = (3/2)R","Cv = (5/2)R","Cv = (9/2)R","Cv = (7/2)R"],a:0},
+  {s:"2.1",q:"If the average kinetic energy of nitrogen gas molecules is 2.0 KJ, calculate the total kinetic energy of nitrogen gas molecules.",o:["3.32×10²¹ J","1.20×10²⁷ J","1.20×10²⁷ J","1.20×10²⁴ J"],a:1},
+  {s:"2.1",q:"The molecules of a gas with high molecular mass will possess:",o:["A broad distribution of speeds","B steep distribution of speeds","Constant distribution of speeds","All of the above"],a:1},
+  {s:"2.1",q:"Which of the following statements is(are) true? (A) At constant temperature, the lighter the gas molecules, the faster the average velocity. (B) At constant temperature, the heavier the gas molecules, the larger the average kinetic energy. (C) As temperature increases, the interparticle collisions of gas molecules increases.",o:["A only","B only","C only","A and C"],a:3},
+  {s:"2.1",q:"Which of the statement is correct? The specific heat capacity at constant volume (Cv) is always greater than the specific heat capacity at constant pressure (Cp) by R (gas constant). The specific heat capacity at constant pressure (Cp) is always greater than the specific heat capacity at constant volume (Cv) by R (gas constant). The specific heat capacity at constant pressure (Cp) is equal to the specific heat capacity at constant volume (Cv).",o:["Statement A","Statement B","Statement C","None"],a:1},
+  {s:"2.1",q:"On which factor does the average kinetic energy of gas molecules depend?",o:["Nature of the gas","Temperature","Volume","Mass"],a:1},
+  {s:"2.1",q:"Compressibility factor (Z) is a measure of:",o:["Colligative properties","Deviation from real gas behaviour","Deviation from ideal gas behaviour","None of the above"],a:2},
+  {s:"2.1",q:"Which of the statement is correct about compressibility factor?",o:["Equal to one at any temperature or pressure","Real gas can have negative or positive deviation","Both A and B","None of the above"],a:1},
+  {s:"2.1",q:"Which statement is NOT correct with the kinetic molecular theory of gases?",o:["Individual gas molecules are far apart","The volume of gas molecules is negligible compared to the gas volume","Collisions are perfectlyelastic","Average kinetic energies of different gases are different at the same temperature"],a:3},
+  {s:"2.1",q:"What is the relationship between absolute temperature and molecular motion?",o:["Temperature measures the number of molecules","Kinetic energy is independent of temperature","Absolute zero means particles stop moving completely","Absolute temperature is directly proportional to the average kinetic energy of molecules"],a:3},
+  {s:"2.1",q:"What is the root-mean-square speed (u_rms) of gas molecules at absolute zero (that is 0 Kelvin)?",o:["Zero","Maximum","Infinite","Unpredictable"],a:0},
+  {s:"2.1",q:"Real gases approach ideal gas behaviour under which conditions?",o:["Low pressure and high temperature","High pressure and high temperature","Low pressure and low temperature","High pressure and low temperature"],a:0},
+  {s:"2.1",q:"The compressibility of gases is suitably explained by which assumption?",o:["Particles are always in chaotic motion","There is no force of attraction between gas molecules","The actual volume of the gas molecules is negligible","Different particles have different velocities"],a:2},
+  {s:"2.1",q:"The mean velocity of a gas is 2.5 km/min. What is the value of the root mean square velocity of the gas? (π = 3.143)",o:["45 m/s","38 m/s","2.7 m/s","2.3 m/s"],a:2},
+  {s:"2.1",q:"Gas molecules tend to ___ and occupy all the space that is available to them.",o:["contract","compress","shrink","expand"],a:3},
+  {s:"2.1",q:"What is the value of the most probable speed of a gas if the root mean square speed of the gas is 16 m/s?",o:["20 m/s","13 m/s","4 m/s","256 m/s"],a:1},
+  {s:"2.1",q:"Collisions of nitrogen gas molecules are ___.",o:["perfectly elastic","perfectly inelastic","always not conserved","always occurring in a proper motion"],a:0},
+  {s:"2.1",q:"What property is the same for all ideal gases at the same temperature?",o:["Number of moles","Molecular density","Average translational kinetic energy","Average velocity"],a:2},
+  {s:"2.1",q:"What is the reduced mass of hydrogen-helium gas system? (H = 1g/mol; He = 2 g/mol; Nₐ = 6.022×10²³ mol⁻¹)",o:["2.2×10⁻²⁷ kg","2.2×10⁻²⁷ g","6.67×10⁻²⁸ kg","1.33 g"],a:2},
+  {s:"2.1",q:"One mole of nitrogen gas at 25°C was compressed in a 5 L container. What pressure was used for the compression? (R = 8.314 J/mol K)",o:["495514 N/m²","495.514 N/m²","41.57 N/m²","495514 atm"],a:0},
+  {s:"2.1",q:"Estimate the average kinetic energy of nitrogen gas molecules if the total kinetic energy possessed by gas molecules is 5 kJ (Nₐ = 6.022×10²³ mol⁻¹)",o:["8.3×10⁻²¹ J","8.3×10⁻²¹ kg","8.3×10⁻²¹ J","8.3×10⁻²⁴ J"],a:0},
+  {s:"2.1",q:"Calculate the value of Cp (molar heat capacity at constant volume) of 1 mole of oxygen gas if C_v (molar heat capacity at constant volume) is 9 J/mol, (O = 16 g/mol, R = 8.314 J/mol K)",o:["17.314 J/mol","0.686 J/mol","21.952 J/mol","0.686 kJ/mol"],a:0},
+  {s:"2.1",q:"The critical volume of a gas is 120 L. The Van der Waals constant 'a' is 3.01² atm/mol. Estimate the critical pressure of the gas if the value of 'a' is ______.",o:["6.94×10³ atm","6.94×10⁻³ atm","6.94×10⁵ N/m²","6.94×10⁵ torr"],a:1},
+  {s:"2.1",q:"Evaluate the mean free path of nitrogen gas molecules if the average speed and collision frequency of the nitrogen gas molecules are 2 m/s and 5 min⁻¹, respectively.",o:["24 m","2.5 m","0.4 m","0.042 m"],a:2},
+  {s:"2.1",q:"The temperature of a gas is 25°C and it is heated to 50°C. What is implication of the heating on the kinetic energy (KE)?",o:["KE is halved","KE is doubled","KE is tripled","KE is unaffected"],a:3},
+
+  // ── TUTORIAL 3.1 ──
+  {s:"3.1",q:"Which law states that energy cannot be created or destroyed?",o:["First law","Second law","Third law","Zeroth law"],a:0},
+  {s:"3.1",q:"The measure of disorder in a system is called:",o:["Enthalpy","Entropy","Free energy","Heat capacity"],a:1},
+  {s:"3.1",q:"For a spontaneous reaction at constant temperature and pressure, ΔG must be:",o:["Positive","Zero","Negative","Undefined"],a:2},
+  {s:"3.1",q:"For a spontaneous reaction at constant temperature and pressure, ΔG must be:",o:["Positive","Zero","Negative","Undefined"],a:2},
+  {s:"3.1",q:"A thermodynamic process is made up of two or more thermodynamic processes.",o:["Function","Phase","Variable","Cycle"],a:3},
+  {s:"3.1",q:"The standard state for a gas is:",o:["1 atm, 0°C","1 bar, 25°C","1 atm, 25°C","1 bar, 0°C"],a:2},
+  {s:"3.1",q:"The standard free energy is defined as:",o:["A = H – TS","G = H – TS","G = U + PV","G = TS – H"],a:1},
+  {s:"3.1",q:"Gibbs free energy is defined as:",o:["H – TS","H + TS","U – PV","U + PV"],a:0},
+  {s:"3.1",q:"Which of the following is a state function?",o:["Heat","Work","Internal energy","Both Heat and Work"],a:2},
+  {s:"3.1",q:"The heat capacity at constant pressure (Cp) is greater than the molar heat capacity at constant volume by a factor __.",o:["0.5R","R","1.5R","2R"],a:1},
+  {s:"3.1",q:"Raouilt's law applies to:",o:["Ideal solutions","Real solutions","Non-ideal solutions","Electrolytes"],a:0},
+  {s:"3.1",q:"The activity coefficient (γ) equals 1 for:",o:["Ideal solutions","Real solutions","Electrolytes","Supercritical fluids"],a:0},
+  {s:"3.1",q:"Which statement about entropy is correct?",o:["Spontaneous entropy of a perfect crystal at 0 K is zero","Entropy always decreases in a spontaneous process","Entropy is conserved in an adiabatic process","Entropy is independent of temperature"],a:0},
+  {s:"3.1",q:"Le Chatelier's principle states that a system at equilibrium will:",o:["Shift to relieve a stress","Maintain constant temperature","Increase its entropy","Keep its volume constant"],a:0},
+  {s:"3.1",q:"The equilibrium constant K is related to ΔG° by:",o:["ΔG° = RT ln K","ΔG° = −RT ln K","ΔG° = K/RT","ΔG° = RT K"],a:1},
+  {s:"3.1",q:"For the reaction N₂(g) + 3H₂(g) → 2NH₃(g), increasing pressure will:",o:["Shift equilibrium to the right","Shift equilibrium to the left","Have no effect","Decrease K"],a:0},
+  {s:"3.1",q:"The dependence ρ ∝ N/V at constant T is a microscopic expression of:",o:["Charles's law","Avogadro's law","Boyle's law","Graham's law"],a:2},
+  {s:"3.1",q:"The statement 'volume occupied by molecules is negligible compared to container volume' is crucial for:",o:["Ideal gas behaviour","Real gas behaviour","Liquid behaviour","Solids only"],a:0},
+  {s:"3.1",q:"At constant T and V, if the number of molecules is doubled, kinetic theory predicts the pressure will:",o:["Remain same","Double","Halve","Become zero"],a:1},
+  {s:"3.1",q:"In deriving Charles's law from kinetic theory at constant pressure, the number of collisions per unit time with walls must:",o:["Decrease with temperature","Increase with temperature","Remain approximately constant","Become zero"],a:1},
+  {s:"3.1",q:"The root-mean-square speed (v_rms) of gas molecules is related to temperature by constant P, doubling T implies the volume will:",o:["Remain same","Double","Halve","Become four times"],a:1},
+  {s:"3.1",q:"At constant T and P, if the number of molecules is doubled, Boyle's law requires kinetic theory predicts the pressure will:",o:["Double","Remain unchanged","Halve","Become zero"],a:0},
+  {s:"3.1",q:"The ideal gas constant R in PV=nRT can be expressed as R = N·kB as:",o:["R = kB","R = N·kB/Nₐ","R = Nₐ·kB","R = 1/kB"],a:2},
+  {s:"3.1",q:"If the absolute temperature of a gas is tripled at constant volume, kinetic theory predicts that pressure will:",o:["Remain the same","Become three times","Become one-third","Become nine times"],a:1},
+  {s:"3.1",q:"The derivation PV = nRT from kinetic theory assumes that the time between collisions is:",o:["Zero in horizontal direction","Greater in vertical direction","Same in all directions","Dependent on direction of motion"],a:2},
+  {s:"3.1",q:"In kinetic theory, random motion of molecules ensures that macroscopic pressure is:",o:["Dependent on direction of motion","Zero in horizontal direction","Greater in vertical direction","Same in all directions"],a:3},
+  {s:"3.1",q:"Which assumption of kinetic theory most directly leads to the linear relation PV ∝ T?",o:["Negligible intermolecular forces except during collisions","No intermolecular forces","Negligible volume of molecules","Elastic nature of collisions"],a:0},
+  {s:"3.1",q:"For one mole of an ideal gas, combining kinetic theory with Avogadro's law leads to identifying R justifies:",o:["That R is kB","That R depends on pressure","That R is a universal constant","That R depends on volume"],a:2},
+  {s:"3.1",q:"Gay-Lussac's law (P ∝ T at constant V) follows kinetic theory since V:",o:["∝ 1/T","∝ T","Is independent of T","∝ V"],a:2},
+
+  // ── TUTORIAL 3.2 ──
+  {s:"3.2",q:"The 'electrochemical series' orders elements by:",o:["Standard reduction potentials","Ionization energies","Electronegativity","Atomic radius"],a:0},
+  {s:"3.2",q:"The 'activity coefficient' (γ) approaches 1 as:",o:["Concentration → 0","Pressure → 0","Temperature → 0 K","All of the above"],a:0},
+  {s:"3.2",q:"ΔG_mix = RT(x₁ ln x₁ + x₂ ln x₂) for ideal solution is:",o:["Temperature, pressure, and composition","Enthalpy and entropy","Volume and temperature","Heat capacity and entropy"],a:0},
+  {s:"3.2",q:"The 'free energy of mixing' for an ideal solution is:",o:["ΔH_mix = ΔH_m − TΔS_mix","Both A and B","ΔG_mix = ΔH_mix − TΔS_mix","None"],a:2},
+  {s:"3.2",q:"Which of the following statements about a 'perfect crystal' at 0 K is true?",o:["Entropy is zero","Internal energy is zero","Both A and B","Neither A nor B"],a:0},
+  {s:"3.2",q:"The 'enthalpy of solution' is the heat change when:",o:["One mole of solute dissolves in a large amount of solvent","One mole of solvent evaporates","A gas reacts with a solid","A solid melts"],a:0},
+  {s:"3.2",q:"For a pure substance, the Gibbs-Duhem equation relates changes in:",o:["Temperature, pressure, and composition","Enthalpy and entropy","Volume and temperature","Heat capacity and entropy"],a:0},
+  {s:"3.2",q:"For a pure substance, the 'chemical potential' μ is:",o:["Molar Gibbs free energy","Molar internal energy","Molar enthalpy","Molar entropy"],a:0},
+  {s:"3.2",q:"Which of the following statements about a 'perfect crystal' at 0 K is true?",o:["Entropy is zero","Internal energy is zero","Both A and B","Neither A nor B"],a:0},
+  {s:"3.2",q:"At the boiling point of a liquid, the vapour pressure equals atmospheric pressure. This is true:",o:["All of the above","Closed systems at equilibrium","Open systems","Non-equilibrium systems"],a:0},
+  {s:"3.2",q:"For an endothermic dissolution process, the solution temperature:",o:["Increases","Decreases","Remains unchanged","Fluctuates"],a:1},
+  {s:"3.2",q:"The 'heat of fusion' is the energy required to:",o:["Melt a solid","Vaporise a liquid","Sublime a solid","Decompose a compound"],a:0},
+  {s:"3.2",q:"The entropy of vaporisation is typically:",o:["Lower than entropy of fusion","Higher than entropy of fusion","Equal to entropy of fusion","Zero"],a:1},
+  {s:"3.2",q:"A reaction that absorbs heat from the surroundings is called:",o:["Exothermic","Endothermic","Isothermal","Adiabatic"],a:1},
+  {s:"3.2",q:"The 'law of corresponding states' states that all fluids, when compared at the same reduced temperature and pressure, have similar:",o:["Compressibility factor B₂ becomes:","Activity coefficients at high pressure","Phase equilibria of solids","None"],a:0},
+  {s:"3.2",q:"The 'critical compressibility factor' (Zc) for most real gases is approximately:",o:["0.2","0.3","0.5","0.8"],a:1},
+  {s:"3.2",q:"The Boltzmann equation relates entropy to: S = kB ln Ω. The 'Maxwell relations' are derived from:",o:["Laws of thermodynamics","Ideal gas law","Kinetic theory","Conservation of mass"],a:0},
+  {s:"3.2",q:"The 'standard enthalpy of formation' ΔGf° for an element in its standard state is:",o:["Positive","Negative","Zero","Undefined"],a:2},
+  {s:"3.2",q:"The 'enthalpy of atomisation' is the energy required to:",o:["Break all bonds in a molecule","Form a mole of gaseous atoms","Convert a solid to a liquid","Dissolve a solute"],a:1},
+  {s:"3.2",q:"The 'heat capacity ratio' γ = Cp/Cv for a monatomic ideal gas is approximately:",o:["1.00","1.33","1.40","1.67"],a:3},
+  {s:"3.2",q:"The 'adiabatic flame temperature' is the maximum temperature reached when:",o:["Combustion occurs at constant pressure","Combustion occurs at constant volume","No heat is lost to the surroundings","Both B and C"],a:2},
+  {s:"3.2",q:"The 'standard enthalpy of reaction' (ΔH°) is measured at:",o:["1 atm, 25°C","1 bar, 25°C","1 atm, 0°C","1 bar, 0°C"],a:1},
+
+  // ── TUTORIAL 3.3 ──
+  {s:"3.3",q:"A reaction is said to be non-spontaneous when Gibbs energy value is:",o:["Positive","Negative","Undefined","Zero"],a:0},
+  {s:"3.3",q:"Entropy of the universe is constantly increasing according to the:",o:["First law","Second Law","Third law","Zeroth law"],a:1},
+  {s:"3.3",q:"A thermodynamic process is made up of two or more thermodynamic processes.",o:["Function","Phase","Variable","Cycle"],a:3},
+  {s:"3.3",q:"Which of the following is a path function?",o:["Internal energy","Enthalpy","Entropy","Heat"],a:3},
+  {s:"3.3",q:"The molar heat capacity at constant pressure is greater than the molar heat capacity at constant volume by a factor ____.",o:["0.5R","R","1.5R","2R"],a:1},
+  {s:"3.3",q:"Which of the following relationships is incorrect?",o:["PV = nRT","Cpm − Cvm = nR","w = −PextΔV","All of the above"],a:1},
+  {s:"3.3",q:"One of the following is not a kind of thermodynamic system:",o:["Open","Closed","Isolated","Spontaneous"],a:3},
+  {s:"3.3",q:"Extensive properties of thermodynamic systems depend on:",o:["Temperature","Pressure","Amount of the substance","Viscosity"],a:2},
+  {s:"3.3",q:"If the temperature of 1 L of a water sample is 30°C, 20 mL of the same water sample will have the same temperature. That demonstrates that temperature is an:",o:["Intensive property","Extensive property","Repulsive","Cohesive"],a:0},
+  {s:"3.3",q:"An adiabatic process is one where:",o:["ΔV = 0","q = 0","ΔT = 0","P > 0"],a:1},
+  {s:"3.3",q:"E = q − w is the mathematical expression of the:",o:["Zeroth law","Second law","First law","Third law"],a:2},
+  {s:"3.3",q:"One of the following is not a state variable of thermodynamic systems:",o:["Pressure","Volume","Temperature","Internal energy"],a:3},
+  {s:"3.3",q:"Choose the right combination of terms used to describe processes that occur at constant pressure, temperature and volume respectively.",o:["Isobaric, adiabatic and isometric","Isobaric, isothermal and isotropic","Adiabatic, isothermal and isobaric","Isobaric, isoprotic, isometric and isothermal"],a:1},
+  {s:"3.3",q:"The energy of the universe is constant. This statement is an application of the ___ of thermodynamics.",o:["Zeroth law","First law","Second law","Third law"],a:1},
+  {s:"3.3",q:"From the first law of thermodynamics, it can be derived that the heat change at constant volume (qv) is equal to:",o:["ΔE","ΔH","ΔP","ΔF"],a:0},
+  {s:"3.3",q:"The second law of thermodynamic states that the entropy of an isolated system always:",o:["Decreases","Increases","Remains the same","Fluctuates"],a:1},
+  {s:"3.3",q:"A system where neither matter nor energy is exchanged with the surrounding is called:",o:["Closed system","Open system","Isolated system","Isochoric system"],a:2},
+  {s:"3.3",q:"Using the first law of thermodynamics, it can be derived that the heat change at constant pressure (qp) is equal to:",o:["ΔE","ΔH","ΔS","ΔAV"],a:1},
+  {s:"3.3",q:"Properties of a system whose value does not depend on the path taken to achieve it are called:",o:["Dynamic properties","State functions","Static properties","None of the above"],a:1},
+  {s:"3.3",q:"One of the following is not an intensive property:",o:["Surface tension","Temperature","Viscosity","Mass"],a:3},
+  {s:"3.3",q:"Thermodynamics can give information about how fast a reaction will occur:",o:["True","False","Neither A nor B","All of the above"],a:1},
+  {s:"3.3",q:"The expression ΔU = qv implies a condition under which:",o:["Volume does not change","Temperature does not change","Pressure does not change","Composition does not change"],a:0},
+  {s:"3.3",q:"The expression ΔH = qp implies a condition under which:",o:["Volume does not change","Temperature does not change","Pressure does not change","Composition does not change"],a:2},
+  {s:"3.3",q:"The change in internal energy of a system is ____.",o:["ΔU = qv − PAV","ΔU = ΔH","ΔU = ΔH + pAV","ΔU = ΔAH"],a:0},
+  {s:"3.3",q:"The mathematical expression for a reaction occurring at constant pressure is:",o:["ΔU = qv − PAV","ΔU = ΔH − PAV","ΔU = ΔH + pAV","ΔAH = ΔU"],a:1},
+  {s:"3.3",q:"The thermodynamics State function that describes the heat absorbed by a system at constant pressure is called ____.",o:["Calorimetry","Enthalpy","Entropy","Specific heat capacity"],a:1},
+  {s:"3.3",q:"The enthalpy change of a reaction involving solids or liquids only can be expressed as:",o:["ΔH = ΔU","ΔH = ΔU − pAV","ΔH = ΔU + pAV","ΔH = ΔU + ΔH"],a:0},
+  {s:"3.3",q:"The mathematical expression for a reaction occurring at a constant pressure is ____.",o:["ΔU = qv − PAV","ΔH = ΔU − pAV","ΔAU = ΔH","ΔU = ΔAH"],a:1},
+  {s:"3.3",q:"For the fact that the heat capacity of a substance changes with the amount of the substance, describes it as an ___ property.",o:["Extensive","Intensive","Repulsive","Cohesive"],a:0},
+  {s:"3.3",q:"W = PAV, the negative sign in this expression indicates that:",o:["The system absorbs energy from the surrounding","The system loses to the surrounding energy from the surrounding","The surrounding is doing work on the system","The system absorbs energy from the surrounding"],a:1},
+  {s:"3.3",q:"Energy of a system is defined as:",o:["The capacity to do work","The force exerted to build up pressure in an open system","The force released in an open system","The capacity to do work observed at a constant value of internal energy of a system"],a:0},
+  {s:"3.3",q:"The following thermodynamic expression: AH = Hf − Hi denotes:",o:["Entropy change","Enthalpy change","Specific heat capacity","Temperature change"],a:1},
+  {s:"3.3",q:"______ is a measure of the average kinetic energy of all the particles in a system.",o:["Temperature","Work","Osmotic pressure","Dynamic equilibrium"],a:0},
+  {s:"3.3",q:"The thermodynamics State function that describes the heat absorbed by a system at constant pressure is called ______.",o:["Calorimetry","Enthalpy","Entropy","Work"],a:1},
+  {s:"3.3",q:"Change in enthalpy energy is designated negative for:",o:["An exothermic reaction","An endothermic reaction","An irreversible reaction","None"],a:0},
+  {s:"3.3",q:"'The total entropy of a system and its surrounding increases during all spontaneous processes'. This statement is true of:",o:["Second Law of thermodynamics","First Law of thermodynamics","Third Law of thermodynamics","Gay-Lussac's of gases"],a:0},
+  {s:"3.3",q:"For a spontaneous reaction,",o:["ΔS < 0","ΔS > 0","ΔS = 0","ΔS ± 0"],a:1},
+  {s:"3.3",q:"The energy available for doing useful work is known as:",o:["Gibbs Free Energy","Enthalpy energy","Entropy energy","Activation energy"],a:0},
+  {s:"3.3",q:"Change in Internal energy assumes a negative value when:",o:["U_final > U_initial","U_final < U_initial","U_initial = U_final","U_initial > U_final"],a:1},
+  {s:"3.3",q:"For a reaction to become feasible, change in Gibb's free energy will be:",o:["ΔG < 0","ΔG > 0","ΔG = 0","ΔG ≠ 0"],a:0},
+];
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let mode = 'practice';
+let questions = [];
+let current = 0;
+let userAnswers = [];
+let timerInterval = null;
+let timeLeft = 0;
+let quizStarted = false;
+
+function selectMode(m) {
+  mode = m;
+  document.getElementById('mode-practice').classList.toggle('selected', m === 'practice');
+  document.getElementById('mode-exam').classList.toggle('selected', m === 'exam');
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  const sel = document.getElementById('section-select').value;
+  let pool = sel === 'all' ? [...questionBank] : questionBank.filter(q => q.s === sel);
+  questions = shuffle(pool);
+  userAnswers = new Array(questions.length).fill(null);
+  current = 0;
+
+  document.getElementById('home-screen').classList.add('hidden');
+  document.getElementById('quiz-screen').classList.remove('hidden');
+  document.getElementById('progress-wrap').style.display = 'block';
+  document.getElementById('quit-btn').style.display = '';
+
+  if (mode === 'exam') {
+    timeLeft = questions.length * 60;
+    document.getElementById('timer-display').style.display = '';
+    startTimer();
+  }
+
+  renderQuestion();
+}
+
+function startTimer() {
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 120) {
+      document.getElementById('timer-display').classList.add('warn');
+    }
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitQuiz();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+  const s = (timeLeft % 60).toString().padStart(2, '0');
+  document.getElementById('timer-display').textContent = `${m}:${s}`;
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  document.getElementById('q-num').textContent = current + 1;
+  document.getElementById('q-total').textContent = questions.length;
+  document.getElementById('q-section-tag').textContent = 'Tutorial ' + q.s;
+  document.getElementById('q-text').textContent = q.q;
+
+  const ol = document.getElementById('options-list');
+  ol.innerHTML = '';
+  const letters = ['A','B','C','D','E'];
+
+  q.o.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.dataset.idx = i;
+    div.innerHTML = `<div class="opt-letter">${letters[i]}</div><div class="opt-text">${opt}</div>`;
+    div.onclick = () => selectAnswer(i);
+
+    const ua = userAnswers[current];
+    if (mode === 'practice' && ua !== null) {
+      div.classList.add('disabled');
+      if (i === q.a) div.classList.add('correct');
+      else if (i === ua) div.classList.add('incorrect');
+    } else if (mode === 'exam' && ua === i) {
+      div.classList.add('selected');
+    }
+    ol.appendChild(div);
+  });
+
+  // feedback
+  const fb = document.getElementById('feedback-box');
+  fb.style.display = 'none'; fb.className = 'feedback-box';
+  if (mode === 'practice' && userAnswers[current] !== null) {
+    const correct = userAnswers[current] === q.a;
+    fb.style.display = 'block';
+    fb.className = 'feedback-box ' + (correct ? 'correct-fb' : 'incorrect-fb');
+    fb.textContent = correct ? '✓ Correct!' : `✗ Incorrect. Correct answer: ${letters[q.a]}. ${q.o[q.a]}`;
+  }
+
+  // nav
+  document.getElementById('prev-btn').style.display = current > 0 ? '' : 'none';
+  const isLast = current === questions.length - 1;
+  document.getElementById('next-btn').style.display = isLast ? 'none' : '';
+  document.getElementById('submit-btn').style.display = isLast ? '' : 'none';
+
+  // progress
+  const pct = ((current + 1) / questions.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function selectAnswer(idx) {
+  if (userAnswers[current] !== null && mode === 'practice') return;
+  userAnswers[current] = idx;
+  renderQuestion();
+}
+
+function prevQ() {
+  if (current > 0) { current--; renderQuestion(); }
+}
+function nextQ() {
+  if (current < questions.length - 1) { current++; renderQuestion(); }
+}
+
+function submitQuiz() {
+  clearInterval(timerInterval);
+  document.getElementById('timer-display').style.display = 'none';
+  document.getElementById('quit-btn').style.display = 'none';
+  document.getElementById('progress-wrap').style.display = 'none';
+
+  const correct = userAnswers.filter((a, i) => a === questions[i].a).length;
+  const wrong = userAnswers.filter((a, i) => a !== null && a !== questions[i].a).length;
+  const total = questions.length;
+  const pct = Math.round((correct / total) * 100);
+
+  document.getElementById('score-pct').textContent = pct + '%';
+  document.getElementById('res-correct').textContent = correct;
+  document.getElementById('res-wrong').textContent = wrong;
+  document.getElementById('res-total').textContent = total;
+
+  let title = pct >= 70 ? '🎉 Excellent Work!' : pct >= 50 ? '👍 Good Effort' : '📚 Keep Studying';
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-subtitle').textContent = `You answered ${correct} of ${total} questions correctly.`;
+
+  document.getElementById('quiz-screen').classList.add('hidden');
+  document.getElementById('result-screen').classList.remove('hidden');
+
+  setTimeout(() => {
+    const circumference = 326;
+    const offset = circumference - (pct / 100) * circumference;
+    document.getElementById('ring-fill').style.strokeDashoffset = offset;
+  }, 200);
+}
+
+function quitQuiz() {
+  if (confirm('Are you sure you want to quit? Progress will be lost.')) {
+    clearInterval(timerInterval);
+    goHome();
+  }
+}
+
+function goHome() {
+  clearInterval(timerInterval);
+  document.getElementById('quiz-screen').classList.add('hidden');
+  document.getElementById('result-screen').classList.add('hidden');
+  document.getElementById('review-screen').classList.add('hidden');
+  document.getElementById('home-screen').classList.remove('hidden');
+  document.getElementById('timer-display').style.display = 'none';
+  document.getElementById('timer-display').classList.remove('warn');
+  document.getElementById('quit-btn').style.display = 'none';
+  document.getElementById('progress-wrap').style.display = 'none';
+  questions = []; userAnswers = []; current = 0;
+}
+
+function showReview() {
+  const list = document.getElementById('review-list');
+  list.innerHTML = '<div class="review-back"><button class="btn btn-secondary" onclick="backToResult()">← Back to Results</button></div>';
+  const letters = ['A','B','C','D','E'];
+
+  questions.forEach((q, i) => {
+    const ua = userAnswers[i];
+    const isCorrect = ua === q.a;
+    const div = document.createElement('div');
+    div.className = 'review-item ' + (isCorrect ? 'correct' : 'incorrect');
+    let ansHtml = '';
+    if (ua !== null && ua !== q.a) {
+      ansHtml = `<span class="ra-your">Your answer: ${letters[ua]}. ${q.o[ua]}</span>
+                 <span class="ra-correct">Correct: ${letters[q.a]}. ${q.o[q.a]}</span>`;
+    } else if (ua === q.a) {
+      ansHtml = `<span class="ra-same">✓ ${letters[q.a]}. ${q.o[q.a]}</span>`;
+    } else {
+      ansHtml = `<span class="ra-your">Unanswered</span><span class="ra-correct">Correct: ${letters[q.a]}. ${q.o[q.a]}</span>`;
+    }
+    div.innerHTML = `
+      <div class="review-q"><strong>Q${i+1} [Tut ${q.s}]:</strong> ${q.q}</div>
+      <div class="review-ans">${ansHtml}</div>`;
+    list.appendChild(div);
+  });
+
+  document.getElementById('result-screen').classList.add('hidden');
+  document.getElementById('review-screen').classList.remove('hidden');
+}
+
+function backToResult() {
+  document.getElementById('review-screen').classList.add('hidden');
+  document.getElementById('result-screen').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
